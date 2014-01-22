@@ -27,20 +27,26 @@ for BUILDPACK in $(cat $1/.buildpacks); do
     echo "=====> Downloading Buildpack: $url"
 
     if [[ "$url" =~ \.tgz$ ]]; then
+      echo "downloading a tarball" | indent
       mkdir -p "$dir"
       curl -s "$url" | tar xvz -C "$dir" >/dev/null 2>&1
     else
+      echo "cloning a git repository" | indent
       git clone $url $dir >/dev/null 2>&1
     fi
+    echo "done downloading" | indent
     cd $dir
 
     if [ "$branch" != "" ]; then
+      echo "checking out branch $branch" | indent
       git checkout $branch >/dev/null 2>&1
     fi
 
+    echo "fixing up buildpack's permissions" | indent
     # we'll get errors later if these are needed and don't exist
     chmod -f +x $dir/bin/{detect,compile,release} || true
 
+    echo "running detect script" | indent
     framework=$($dir/bin/detect $1)
 
     if [ $? == 0 ]; then
@@ -54,6 +60,9 @@ for BUILDPACK in $(cat $1/.buildpacks); do
       if [ -x $dir/bin/release ]; then
         $dir/bin/release $1 > $1/last_pack_release.out
       fi
+    else
+      echo "framework not detected; error messages may display below" | indent
+      echo "$framework"
     fi
   fi
 done
