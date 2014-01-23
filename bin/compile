@@ -66,6 +66,7 @@ for BUILDPACK in $(cat $1/.buildpacks); do
     else
       echo "framework not detected; error messages may display below" | indent
       echo "$framework"
+      exit 1
     fi
   fi
 done
